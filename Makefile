@@ -5,7 +5,7 @@ CXX = clang++
 INCLUDE_DIR = include
 
 # Compiler flags
-CXXFLAGS = -std=c++17 -O3 -march=native -mtune=native -flto -ffast-math -funroll-loops -I$(INCLUDE_DIR)
+CXXFLAGS = -Xclang -fopenmp -L/opt/homebrew/opt/libomp/lib -I/opt/homebrew/opt/libomp/include -lomp -std=c++17 -O3 -march=native -mtune=native -flto -ffast-math -funroll-loops -I$(INCLUDE_DIR)
 
 # Source file
 SRC = main.cpp
