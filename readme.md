@@ -22,6 +22,10 @@ The benchmarks were run on an Apple M1 Pro processor. Here are the results:
 | mat_mul_cache_b          | 10  | 126.243  | 12624333 | 0.067    | 79.2       |
 | mat_mul_cache_omp_b      | 10  | 28.014   | 2801441  | 0.015    | 357.0      |
 
+Note: 
+- The 'Dim' column indicates that each implementation is run 10 times.
+- Each run performs multiplication of 500x500 matrices.
+
 ## Implementations
 
 The repository includes the following matrix multiplication implementations:
@@ -34,6 +38,7 @@ The repository includes the following matrix multiplication implementations:
 ## Building and Running
 
 To run the benchmarks:
+
 ```bash
 make run
 ```
