@@ -84,14 +84,14 @@ static void mat_mul_simd(const Matrix &a, const Matrix &b, Matrix &out) {
 
     #pragma omp parallel for collapse(2)
     for (int i = 0; i < M; ++i) {
-        for (int j = 0; j < N; j += VECTOR_SIZE) {
-            float32x4_t sum = vdupq_n_f32(0.0f);
-            for (int k = 0; k < K; ++k) {
+        for (int k = 0; k < K; ++k) {
+            float32x4_t a_val = vdupq_n_f32(a(i, k));
+            for (int j = 0; j < N; j += VECTOR_SIZE) {
                 float32x4_t b_vec = vld1q_f32(&b(k, j));
-                float32x4_t a_val = vdupq_n_f32(a(i, k));
-                sum = vfmaq_f32(sum, a_val, b_vec);
+                float32x4_t out_vec = vld1q_f32(&out(i, j));
+                out_vec = vfmaq_f32(out_vec, a_val, b_vec);
+                vst1q_f32(&out(i, j), out_vec);
             }
-            vst1q_f32(&out(i, j), sum);
         }
     }
 }
@@ -130,14 +130,9 @@ static void mat_mul_simd_advanced(const Matrix &a, const Matrix &b, Matrix &out)
 }
 
 static void mat_mul_eigen(const Matrix &a, const Matrix &b, Matrix &out) {
-    // Convert custom Matrix to Eigen::MatrixXf using Map
     Eigen::Map<const Eigen::MatrixXf> eigen_a(a.data(), a.rows(), a.cols());
     Eigen::Map<const Eigen::MatrixXf> eigen_b(b.data(), b.rows(), b.cols());
-
-    // Map the output Matrix to Eigen::MatrixXf
     Eigen::Map<Eigen::MatrixXf> eigen_out(out.data(), out.rows(), out.cols());
-
-    // Perform matrix multiplication directly into the output
     eigen_out.noalias() = eigen_a * eigen_b;
 }
 
@@ -184,7 +179,7 @@ bool compare_matrices(picobench::result_t a, picobench::result_t b) {
     float sum_squared =
         std::inner_product(mat_a, mat_a + N * N, mat_b, 0.0f, std::plus<>(),
                            [](float a, float b) { return (a - b) * (a - b); });
-    std::cout << std::setprecision(9) << std::fixed << mat_b[(N*N)/2] << std::endl;
+    //std::cout << std::setprecision(9) << std::fixed << mat_b[(N*N)/2] << std::endl;
     return std::sqrt(sum_squared / (N * N)) < 1e-3f;
 }
 
