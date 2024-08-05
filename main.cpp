@@ -9,6 +9,12 @@
 #include <omp.h>
 #include <vector>
 
+#define CREATE_BENCHMARK(func_name) \
+static void func_name##_b(picobench::state &s) { \
+  mat_mul_wrapper(s, func_name); \
+} \
+PICOBENCH(func_name##_b);
+
 const int N = 500;
 
 static void mat_mul_naive_acc(const Matrix &a, const Matrix &b, Matrix &out) {
@@ -168,37 +174,13 @@ static void mat_mul_wrapper(picobench::state &s,
   }
 }
 
-static void mat_mul_naive_b(picobench::state &s) {
-  mat_mul_wrapper(s, mat_mul_naive);
-}
-static void mat_mul_cache_b(picobench::state &s) {
-  mat_mul_wrapper(s, mat_mul_cache);
-}
-static void mat_mul_cache_omp_b(picobench::state &s) {
-  mat_mul_wrapper(s, mat_mul_cache_omp);
-}
-static void mat_mul_naive_acc_b(picobench::state &s) {
-  mat_mul_wrapper(s, mat_mul_naive_acc);
-}
-static void mat_mul_simd_b(picobench::state &s) {
-  mat_mul_wrapper(s, mat_mul_simd);
-}
-
-static void mat_mul_simd_advanced_b(picobench::state &s) {
-  mat_mul_wrapper(s, mat_mul_simd_advanced);
-}
-
-static void mat_mul_eigen_b(picobench::state &s) {
-  mat_mul_wrapper(s, mat_mul_eigen);
-}
-
-PICOBENCH(mat_mul_naive_b);
-PICOBENCH(mat_mul_naive_acc_b);
-PICOBENCH(mat_mul_cache_b);
-PICOBENCH(mat_mul_simd_b);
-PICOBENCH(mat_mul_cache_omp_b);
-PICOBENCH(mat_mul_eigen_b);
-PICOBENCH(mat_mul_simd_advanced_b);
+CREATE_BENCHMARK(mat_mul_naive);
+CREATE_BENCHMARK(mat_mul_naive_acc);
+CREATE_BENCHMARK(mat_mul_cache);
+CREATE_BENCHMARK(mat_mul_simd);
+CREATE_BENCHMARK(mat_mul_cache_omp);
+CREATE_BENCHMARK(mat_mul_eigen);
+CREATE_BENCHMARK(mat_mul_simd_advanced);
 
 
 bool compare_matrices(picobench::result_t a, picobench::result_t b) {
