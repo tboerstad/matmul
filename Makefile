@@ -23,7 +23,7 @@ $(TARGET): $(SRC)
 
 # Run the program
 run: $(TARGET)
-	./$(TARGET) --iters=10
+	./$(TARGET) --iters=1 --samples=10
 
 # Clean up
 clean:
