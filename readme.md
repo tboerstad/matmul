@@ -56,7 +56,7 @@ make run
 ## Dependencies
 
 - [picobench](https://github.com/iboB/picobench): A micro-benchmarking library for C++
-- OpenMP: Used for parallelization in the `mat_mul_cache_omp` implementation
+- OpenMP: Used for parallelization in various implementations
 - Eigen: A C++ template library for linear algebra
 - Clang compiler with OpenMP support
 - Homebrew-installed OpenMP and Eigen libraries (for macOS)
