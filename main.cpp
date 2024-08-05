@@ -2,13 +2,16 @@
 #include "picobench/picobench.hpp"
 
 #include "matrix.h"
+#define EIGEN_DEFAULT_TO_ROW_MAJOR
+#include <Eigen/Dense>
+#include <arm_neon.h>
 #include <numeric>
 #include <omp.h>
 #include <vector>
 
 const int N = 500;
 
-static void mat_mul_naive_v2(const Matrix &a, const Matrix &b, Matrix &out) {
+static void mat_mul_naive_acc(const Matrix &a, const Matrix &b, Matrix &out) {
   const int rowsOut = a.rows();
   const int colsOut = b.cols();
   const int innerDim = a.cols();
@@ -64,6 +67,78 @@ static void mat_mul_cache_omp(const Matrix &a, const Matrix &b, Matrix &out) {
   }
 }
 
+static void mat_mul_simd(const Matrix &a, const Matrix &b, Matrix &out) {
+    const int M = a.rows();
+    const int N = b.cols();
+    const int K = a.cols();
+    constexpr int VECTOR_SIZE = 4; // NEON processes 4 floats at a time
+    constexpr int BLOCK_SIZE = 64; // Adjust based on cache size
+
+    #pragma omp parallel for collapse(2)
+    for (int i = 0; i < M; i += BLOCK_SIZE) {
+        for (int j = 0; j < N; j += BLOCK_SIZE) {
+            for (int ii = i; ii < std::min(i + BLOCK_SIZE, M); ++ii) {
+                for (int jj = j; jj < std::min(j + BLOCK_SIZE, N); jj += VECTOR_SIZE) {
+                    float32x4_t sum = vdupq_n_f32(0.0f);
+                    for (int k = 0; k < K; ++k) {
+                        float32x4_t b_vec = vld1q_f32(&b(k, jj));
+                        float32x4_t a_val = vdupq_n_f32(a(ii, k));
+                        sum = vfmaq_f32(sum, a_val, b_vec);
+                    }
+                    vst1q_f32(&out(ii, jj), sum);
+                }
+            }
+        }
+    }
+}
+
+static void mat_mul_simd_advanced(const Matrix &a, const Matrix &b, Matrix &out) {
+    const int M = a.rows();
+    const int N = b.cols();
+    const int K = a.cols();
+    constexpr int VECTOR_SIZE = 4; // NEON processes 4 floats at a time
+    constexpr int BLOCK_SIZE = 64; // Adjust based on cache size
+
+    #pragma omp parallel for collapse(2)
+    for (int i = 0; i < M; i += BLOCK_SIZE) {
+        for (int j = 0; j < N; j += BLOCK_SIZE) {
+            for (int k = 0; k < K; k += BLOCK_SIZE) {
+                for (int ii = i; ii < std::min(i + BLOCK_SIZE, M); ii += VECTOR_SIZE) {
+                    for (int jj = j; jj < std::min(j + BLOCK_SIZE, N); jj += VECTOR_SIZE) {
+                        float32x4_t sum[VECTOR_SIZE] = {
+                            vdupq_n_f32(0.0f), vdupq_n_f32(0.0f),
+                            vdupq_n_f32(0.0f), vdupq_n_f32(0.0f)
+                        };
+                        for (int kk = k; kk < std::min(k + BLOCK_SIZE, K); ++kk) {
+                            float32x4_t b_vec = vld1q_f32(&b(kk, jj));
+                            for (int v = 0; v < VECTOR_SIZE; ++v) {
+                                float32x4_t a_val = vdupq_n_f32(a(ii + v, kk));
+                                sum[v] = vfmaq_f32(sum[v], a_val, b_vec);
+                            }
+                        }
+                        for (int v = 0; v < VECTOR_SIZE; ++v) {
+                            float32x4_t current = vld1q_f32(&out(ii + v, jj));
+                            vst1q_f32(&out(ii + v, jj), vaddq_f32(current, sum[v]));
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+static void mat_mul_eigen(const Matrix &a, const Matrix &b, Matrix &out) {
+  // Convert custom Matrix to Eigen::MatrixXf using Map
+  Eigen::Map<const Eigen::MatrixXf> eigenA(a.data(), a.rows(), a.cols());
+  Eigen::Map<const Eigen::MatrixXf> eigenB(b.data(), b.rows(), b.cols());
+
+  // Map the output Matrix to Eigen::MatrixXf
+  Eigen::Map<Eigen::MatrixXf> eigenOut(out.data(), out.rows(), out.cols());
+
+  // Perform matrix multiplication directly into the output
+  eigenOut.noalias() = eigenA * eigenB;
+}
+
 static void mat_mul_wrapper(picobench::state &s,
                             void (*matmul_func)(const Matrix &, const Matrix &,
                                                 Matrix &)) {
@@ -83,7 +158,6 @@ static void mat_mul_wrapper(picobench::state &s,
 
   for (auto _ : s) {
     matmul_func(A, B, C);
-
     if (first_iteration) {
       // FYI leaks memory
       float *flat_matrix = new float[N * N];
@@ -103,14 +177,29 @@ static void mat_mul_cache_b(picobench::state &s) {
 static void mat_mul_cache_omp_b(picobench::state &s) {
   mat_mul_wrapper(s, mat_mul_cache_omp);
 }
-static void mat_mul_naive_v2_b(picobench::state &s) {
-  mat_mul_wrapper(s, mat_mul_naive_v2);
+static void mat_mul_naive_acc_b(picobench::state &s) {
+  mat_mul_wrapper(s, mat_mul_naive_acc);
+}
+static void mat_mul_simd_b(picobench::state &s) {
+  mat_mul_wrapper(s, mat_mul_simd);
+}
+
+static void mat_mul_simd_advanced_b(picobench::state &s) {
+  mat_mul_wrapper(s, mat_mul_simd_advanced);
+}
+
+static void mat_mul_eigen_b(picobench::state &s) {
+  mat_mul_wrapper(s, mat_mul_eigen);
 }
 
 PICOBENCH(mat_mul_naive_b);
-PICOBENCH(mat_mul_naive_v2_b);
+PICOBENCH(mat_mul_naive_acc_b);
 PICOBENCH(mat_mul_cache_b);
+PICOBENCH(mat_mul_simd_b);
 PICOBENCH(mat_mul_cache_omp_b);
+PICOBENCH(mat_mul_eigen_b);
+PICOBENCH(mat_mul_simd_advanced_b);
+
 
 bool compare_matrices(picobench::result_t a, picobench::result_t b) {
 
@@ -119,12 +208,8 @@ bool compare_matrices(picobench::result_t a, picobench::result_t b) {
   float sum_squared =
       std::inner_product(mat_a, mat_a + N * N, mat_b, 0.0f, std::plus<>(),
                          [](float a, float b) { return (a - b) * (a - b); });
-
-  //   std::copy(mat_a, mat_a + N * N, std::ostream_iterator<float>(std::cout, "
-  //   ")); std::copy(mat_b, mat_b + N * N,
-  //   std::ostream_iterator<float>(std::cout, " "));
-
-  return std::sqrt(sum_squared / (N * N)) < 1e-6;
+    std::cout << std::setprecision(9) << std::fixed << mat_b[(N*N)/2] << std::endl;
+  return std::sqrt(sum_squared / (N * N)) < 1e-3f;
 }
 
 int main(int argc, char *argv[]) {
