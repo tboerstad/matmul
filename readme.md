@@ -18,15 +18,15 @@ This investigation compares the performance of different matrix multiplication a
 
 The benchmarks were run on an Apple M1 Pro processor. Here are the latest results:
 
-| Name (* = baseline)      | Dim | Total ms | ns/op    | Baseline | Ops/second |
-|--------------------------|-----|----------|----------|----------|------------|
-| mat_mul_naive_b *        | 1   | 1208.279 | 120827e4 | -        | 0.8        |
-| mat_mul_naive_acc_b      | 1   | 1159.172 | 115917e4 | 0.959    | 0.9        |
-| mat_mul_cache_b          | 1   | 78.609   | 78609500 | 0.065    | 12.7       |
-| mat_mul_simd_b           | 1   | 39.607   | 39607417 | 0.033    | 25.2       |
-| mat_mul_cache_omp_b      | 1   | 16.121   | 16121416 | 0.013    | 62.0       |
-| mat_mul_simd_advanced_b  | 1   | 11.434   | 11433542 | 0.009    | 87.5       |
-| mat_mul_eigen_b          | 1   | 11.023   | 11022584 | 0.009    | 90.7       |
+ Name (* = baseline)      |   Dim   |  Total ms |  ns/op  |Baseline| Ops/second
+--------------------------|--------:|----------:|--------:|-------:|----------:
+ mat_mul_naive_b *        |       1 |  1739.787 |173978e4 |      - |        0.6
+ mat_mul_naive_acc_b      |       1 |  1651.800 |165179e4 |  0.949 |        0.6
+ mat_mul_cache_b          |       1 |   107.494 |107494e3 |  0.062 |        9.3
+ mat_mul_simd_b           |       1 |    47.020 |47020000 |  0.027 |       21.3
+ mat_mul_cache_omp_b      |       1 |    20.003 |20002917 |  0.011 |       50.0
+ mat_mul_simd_advanced_b  |       1 |    19.642 |19641958 |  0.011 |       50.9
+ mat_mul_eigen_b          |       1 |     9.692 | 9692000 |  0.006 |      103.2
 
 Note: 
 - All benchmarks were performed on an Apple M1 Pro processor.
