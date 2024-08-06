@@ -67,7 +67,7 @@ static void mat_mul_cache_omp(const Matrix &a, const Matrix &b, Matrix &out) {
     const int cols_out = b.cols();
     const int inner_dim = a.cols();
 
-    #pragma omp parallel for
+    #pragma omp parallel for schedule(dynamic)
     for (int i = 0; i < rows_out; ++i) {
         for (int k = 0; k < inner_dim; ++k) {
             for (int j = 0; j < cols_out; ++j) {
@@ -82,7 +82,7 @@ static void mat_mul_simd(const Matrix &a, const Matrix &b, Matrix &out) {
     const int N = b.cols();
     const int K = a.cols();
 
-    #pragma omp parallel for
+    #pragma omp parallel for schedule(dynamic)
     for (int i = 0; i < M; ++i) {
         for (int k = 0; k < K; ++k) {
             float32x4_t a_val = vdupq_n_f32(a(i, k));
@@ -101,7 +101,7 @@ static void mat_mul_simd_advanced(const Matrix &a, const Matrix &b, Matrix &out)
     const int N = b.cols();
     const int K = a.cols();
 
-    #pragma omp parallel for
+    #pragma omp parallel for schedule(dynamic)
     for (int i = 0; i < M; i += BLOCK_SIZE) {
         for (int j = 0; j < N; j += BLOCK_SIZE) {
             for (int k = 0; k < K; k += BLOCK_SIZE) {
@@ -169,8 +169,8 @@ CREATE_BENCHMARK(mat_mul_naive);
 CREATE_BENCHMARK(mat_mul_naive_acc);
 CREATE_BENCHMARK(mat_mul_cache);
 CREATE_BENCHMARK(mat_mul_simd);
-CREATE_BENCHMARK(mat_mul_cache_omp);
 CREATE_BENCHMARK(mat_mul_simd_advanced);
+CREATE_BENCHMARK(mat_mul_cache_omp);
 CREATE_BENCHMARK(mat_mul_eigen);
 
 bool compare_matrices(picobench::result_t a, picobench::result_t b) {

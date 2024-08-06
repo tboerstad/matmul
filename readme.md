@@ -20,13 +20,13 @@ The benchmarks were run on an Apple M1 Pro processor. Here are the latest result
 
  Name (* = baseline)      |   Dim   |  Total ms |  ns/op  |Baseline| Ops/second
 --------------------------|--------:|----------:|--------:|-------:|----------:
- mat_mul_naive_b *        |       1 |  1739.787 |173978e4 |      - |        0.6
- mat_mul_naive_acc_b      |       1 |  1651.800 |165179e4 |  0.949 |        0.6
- mat_mul_cache_b          |       1 |   107.494 |107494e3 |  0.062 |        9.3
- mat_mul_simd_b           |       1 |    47.020 |47020000 |  0.027 |       21.3
- mat_mul_cache_omp_b      |       1 |    20.003 |20002917 |  0.011 |       50.0
- mat_mul_simd_advanced_b  |       1 |    19.642 |19641958 |  0.011 |       50.9
- mat_mul_eigen_b          |       1 |     9.692 | 9692000 |  0.006 |      103.2
+ mat_mul_naive_b *        |       1 |  1730.107 |173010e4 |      - |        0.6
+ mat_mul_naive_acc_b      |       1 |  1645.850 |164585e4 |  0.951 |        0.6
+ mat_mul_cache_b          |       1 |   107.201 |107201e3 |  0.062 |        9.3
+ mat_mul_simd_b           |       1 |    45.826 |45825750 |  0.026 |       21.8
+ mat_mul_simd_advanced_b  |       1 |    17.634 |17633750 |  0.010 |       56.7
+ mat_mul_cache_omp_b      |       1 |    16.527 |16527500 |  0.010 |       60.5
+ mat_mul_eigen_b          |       1 |     9.785 | 9785125 |  0.006 |      102.2
 
 Note: 
 - All benchmarks were performed on an Apple M1 Pro processor.
