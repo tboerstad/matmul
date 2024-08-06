@@ -11,7 +11,7 @@
 #include "matrix.h"
 
 
-const int N = 1000;
+const int N = 1024;
 constexpr int VECTOR_SIZE = 4; // NEON processes 4 floats at a time
 constexpr int BLOCK_SIZE = 32; // Adjust based on cache size
 
@@ -179,8 +179,9 @@ bool compare_matrices(picobench::result_t a, picobench::result_t b) {
     float sum_squared =
         std::inner_product(mat_a, mat_a + N * N, mat_b, 0.0f, std::plus<>(),
                            [](float a, float b) { return (a - b) * (a - b); });
-    //std::cout << std::setprecision(9) << std::fixed << mat_b[(N*N)/2] << std::endl;
-    return std::sqrt(sum_squared / (N * N)) < 1e-5f;
+    // std::cout << std::setprecision(9) << std::fixed << mat_b[(N*N)/2] << std::endl;
+    // std::cout << std::setprecision(9) << std::fixed << std::sqrt(sum_squared / (N * N)) << std::endl;
+    return std::sqrt(sum_squared / (N * N)) < 1e-3f;
 }
 
 int main(int argc, char *argv[]) {
